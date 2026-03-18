@@ -1,0 +1,21 @@
+# ambiente virtual
+venv/
+.env/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# relatórios gerados pelo NetOps
+relatorios/
+
+# editor
+.vscode/
+.idea/
+
+# sistema
+.DS_Store
+Thumbs.db
