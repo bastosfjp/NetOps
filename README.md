@@ -51,6 +51,45 @@ Reúne as principais ferramentas de troubleshooting em um único lugar, com inte
 - Suporte a redirecionamentos automáticos
 - Via `requests`
  
+**SSL Check**
+- Verificação de validade do certificado HTTPS
+- Exibe emissor, datas de validade, versão TLS e domínios alternativos (SANs)
+- Alerta visual quando o certificado expira em menos de 30 dias
+- Detecta certificados expirados e autoassinados
+- Via bibliotecas padrão `ssl` e `socket`
+ 
+### 🔹 Monitor
+ 
+**Monitor MTR**
+- Monitoramento contínuo de rota em tempo real estilo MTR
+- Mapeia automaticamente todos os hops via traceroute
+- Pinga cada hop em paralelo usando threads independentes
+- Exibe latência mínima, média e máxima por hop
+- Percentual de perda de pacotes por hop com alerta visual por cor
+- Tabela atualizada a cada segundo sem scrollar — via `rich.Live`
+- Encerra graciosamente com `Ctrl+C`
+ 
+### 🔹 Utilitários
+ 
+**Exportação de relatórios**
+- Ao final de qualquer ferramenta, o usuário pode salvar o resultado
+- Escolha entre formato JSON ou TXT no momento de salvar
+- Arquivo gerado com nome automático: `ferramenta_alvo_timestamp`
+- Salvo na pasta `relatorios/` na raiz do projeto
+ 
+**Visualizador de relatórios**
+- Lista todos os relatórios salvos ordenados do mais recente ao mais antigo
+- Abre e exibe o conteúdo de qualquer arquivo direto no terminal
+- JSON exibido formatado e colorido via `rich`
+- Opções de deletar arquivo ou abrir a pasta no explorador
+ 
+**Histórico de execuções**
+- Registra automaticamente cada ferramenta utilizada
+- Exibe ferramenta, alvo, data, hora e status de cada execução
+- Status com três estados: sucesso, erro e timeout
+- Limite de 50 últimas execuções — entradas antigas removidas automaticamente
+- Detalhe completo de cada execução ao selecionar
+ 
 ---
  
 ## 🚀 Como usar
@@ -92,17 +131,24 @@ O terminal exibe o banner, as informações do sistema e o menu principal. Naveg
 netops/
 ├── main.py              # ponto de entrada e banner
 ├── cli.py               # menus e navegação
+├── historico.json       # histórico de execuções (ignorado pelo git)
 ├── requirements.txt     # dependências
+├── relatorios/          # relatórios gerados (ignorado pelo git)
 ├── tools/
 │   ├── __init__.py
 │   ├── ping.py          # ferramenta de ping
 │   ├── tracert.py       # ferramenta de traceroute
 │   ├── portscan.py      # scanner de portas
 │   ├── dns.py           # consulta DNS
-│   └── http_check.py    # verificação HTTP
+│   ├── http_check.py    # verificação HTTP
+│   ├── ssl_check.py     # verificação de certificado SSL
+│   └── monitor.py       # monitor MTR em tempo real
 └── utils/
     ├── __init__.py
-    └── sysinfo.py       # informações do sistema e IP público
+    ├── sysinfo.py       # informações do sistema e IP público
+    ├── reporter.py      # criação e salvamento de relatórios
+    ├── relatorios.py    # visualizador de relatórios
+    └── historico.py     # histórico de execuções
 ```
  
 ---
@@ -111,30 +157,29 @@ netops/
  
 | Biblioteca | Uso |
 |---|---|
-| `rich` | Interface colorida no terminal, tabelas e painéis |
+| `rich` | Interface colorida no terminal, tabelas, painéis e Live |
 | `subprocess` | Execução de comandos do sistema (ping, tracert) |
-| `socket` | Comunicação de rede de baixo nível (port scan, IP local) |
+| `socket` | Comunicação de rede de baixo nível (port scan, IP local, SSL) |
+| `ssl` | Verificação de certificados HTTPS |
 | `sys` | Detecção do sistema operacional |
 | `requests` | Verificação HTTP e consulta de IP público |
 | `dnspython` | Consultas DNS |
-| `datetime` | Data e hora na inicialização |
+| `psutil` | Informações de interfaces de rede |
+| `threading` | Execução paralela no monitor MTR |
+| `datetime` | Data, hora e timestamps |
+| `json` | Relatórios e histórico |
+| `pathlib` | Manipulação de caminhos de arquivo |
  
 ---
  
 ## 🗺️ Roadmap
  
-### Em desenvolvimento
- 
-- [ ] **SSL Check** — validade, emissor e dados do certificado HTTPS
- 
 ### Próximas features
  
-- [ ] **Exportação de relatórios** — salvar resultados em JSON ou TXT com timestamp
-- [ ] **Histórico de execuções** — log local das últimas verificações realizadas
 - [ ] **Banner Grabbing** — identificação de versão de serviços em portas abertas
-- [ ] **Monitor de host** — ping contínuo com alerta quando host cai ou volta
 - [ ] **Whois** — consulta de informações de registro de domínios e IPs
 - [ ] **Scan de range de IPs** — varredura de múltiplos hosts em uma sub-rede
+- [ ] **Info de interface** — detecção de cabo/WiFi com detalhes da conexão no painel de sistema
 - [ ] **Teste de velocidade** — medição de latência e throughput da conexão
 - [ ] **Suporte a argumentos diretos via CLI** — `python main.py ping 8.8.8.8` sem menu interativo (`argparse`)
  

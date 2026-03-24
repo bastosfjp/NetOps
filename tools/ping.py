@@ -29,15 +29,20 @@ def run_ping(host:str):
             ["ping","-"+ tipo_ip, flag, pacotes,host],
             capture_output=True,
             text=True,
+            encoding="cp850",
             timeout=15
         )
 
         if resultado.returncode == 0:
             console.print(resultado.stdout)
+            return resultado.stdout
         else:
             console.print(f"\n[bold red]✗ Host {host} não respondeu[/bold red]")
+            return f"Host {host} não respondeu"
 
     except subprocess.TimeoutExpired:
         console.print("\n[bold red]✗ Timeout — host demorou demais[/bold red]")
+        return "Timeout"
     except Exception as e:
         console.print(f"\n[bold red]✗ Erro inesperado: {e}[/bold red]")
+        return f"Erro: {e}"

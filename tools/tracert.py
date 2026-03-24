@@ -4,38 +4,37 @@ from rich.console import Console
 
 console = Console()
 
-def run_tracert(host:str):
-    console.print(f"\n[bold cyan]Traceroute → {host}[bold cyan]\n")
-
-    # windows usa tracert mac e linux usam traceroute
+def run_tracert(host: str):
+    console.print(f"\n[bold cyan]Traceroute → {host}[/bold cyan]\n")
     comando = "tracert" if sys.platform == "win32" else "traceroute"
-
-    if ":" in host:
-        tipo_ip = "-6"
-    elif all(c.isdigit or c == "." for c in host):
-        tipo_ip = "-4"
-    else:
-        tipo_ip = ""
 
     try:
         processo = subprocess.Popen(
-            [comando,tipo_ip,host],
+            [comando, host],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
+            encoding="cp850",
             text=True
         )
-    # imprime linha por linha conforme vai chegando
+
+        linhas = []
         for linha in processo.stdout:
             linha = linha.rstrip()
             if linha:
                 console.print(linha)
+                linhas.append(linha)    
 
         processo.wait()
-        
+
         if processo.returncode != 0:
             console.print(f"\n[bold red]✗ Traceroute falhou para {host}[/bold red]")
+            return f"Traceroute falhou para {host}"
+
+        return "\n".join(linhas)        
 
     except FileNotFoundError:
-        console.print(f"[red]✗ Comando '{comando}' não encontrado no sistema[/red]")
+        console.print(f"[red]✗ Comando '{comando}' não encontrado[/red]")
+        return f"Comando {comando} não encontrado"
     except Exception as e:
         console.print(f"\n[bold red]✗ Erro inesperado: {e}[/bold red]")
+        return f"Erro: {e}"

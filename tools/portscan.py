@@ -22,49 +22,51 @@ PORTAS_COMUNS = {
     27017:"MongoDB"
 }
 
-def run_portscan(host:str):
+def run_portscan(host: str):
     console.print(f"\n[bold cyan]Port Scan → {host}[/bold cyan]\n")
 
     try:
         ip = socket.gethostbyname(host)
         console.print(f"[cyan]→[/cyan] IP resolvido: [bold]{ip}[/bold]\n")
     except socket.gaierror:
-        console.print(f"[bold red]x Não foi possível resolver o host {host}[/bold red]")
-        return
-    
-    usar_padrao = console.input("Escanear portas padrão? [[bold]S[/bold]/N]: ").strip().lower()
+        console.print(f"[bold red]✗ Não foi possível resolver {host}[/bold red]")
+        return f"Não foi possível resolver {host}"
 
-    if usar_padrao in ["","s"]:
-        portas = PORTAS_COMUNS
-    else:
-        entrada = console.input("Digite as portas separadas por vírgula (ex: 80, 443, 8080): ").strip()
-        portas = {}
-        for item in entrada.split(","):
-            if item.isdigit() and 1 <= int(item) <= 65535:
-                portas[int(item)] = "customizada"
+    customizado = console.input(
+        "Portas customizadas? Digite separado por vírgula ou Enter para padrão: "
+    ).strip()
+
+    if customizado:
+        portas_scan = {}
+        for p in customizado.split(","):
+            p = p.strip()
+            if p.isdigit():
+                portas_scan[int(p)] = "customizada"
             else:
-                console.print(f"[yellow]⚠ '{item}' ignorado — porta inválida[/yellow]")
+                console.print(f"[yellow]⚠ '{p}' ignorado — não é um número válido[/yellow]")
+    else:
+        portas_scan = PORTAS_COMUNS
 
-    if not portas:
-        console.print("[bold red]✗ Nenhuma porta válida informada[/bold red]")
-        return
-    
-    tabela = Table("Porta","Serviço","Status", show_header=True, header_style="bold cyan")
+    tabela = Table("Porta", "Serviço", "Status", show_header=True, header_style="bold cyan")
 
-    abertas = 0
-
-    for porta,servico in portas.items():
+    abertas = []
+    for porta, servico in portas_scan.items():
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(1)
-
-        resultado = sock.connect_ex((ip,porta))
+        resultado = sock.connect_ex((ip, porta))
         sock.close()
 
         if resultado == 0:
-            tabela.add_row(str(porta),servico,"[bold green]aberta[/bold green]")
-            abertas += 1
+            tabela.add_row(str(porta), servico, "[bold green]aberta[/bold green]")
+            abertas.append(f"{porta}/{servico}")
         else:
-            tabela.add_row(str(porta),servico,"[dim]fechada[/dim]")
-        
+            tabela.add_row(str(porta), servico, "[dim]fechada[/dim]")
+
     console.print(tabela)
-    console.print(f"\n[cyan]→[/cyan] {abertas} porta(s) aberta(s) de {len(portas)} verificadas")
+    console.print(f"\n[cyan]→[/cyan] {len(abertas)} porta(s) aberta(s) de {len(portas_scan)} verificadas")
+
+    return {
+        "ip": ip,
+        "portas_abertas": abertas,
+        "total_verificadas": len(portas_scan)
+    }

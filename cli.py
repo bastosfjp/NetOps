@@ -76,6 +76,8 @@ def exibir_sysinfo():
 def menu_conectividade():
     from tools.ping import run_ping
     from tools.tracert import run_tracert
+    from utils.reporter import perguntar_salvar
+    from utils.historico import registrar
 
     while True:
         console.print()
@@ -91,11 +93,17 @@ def menu_conectividade():
             break
         elif escolha == "1":
             host = pedir_host("ping")
-            run_ping(host)
+            output = run_ping(host)
+            status = "timeout" if "timeout" in str(output).lower() else "erro" if "erro" in str(output).lower() else "sucesso"                                     # ← linha nova
+            registrar("ping", host, status) 
+            perguntar_salvar("ping", host,{"output":output})
             voltar()
         elif escolha == "2":
             host = pedir_host("tracert")
-            run_tracert(host)
+            status = "timeout" if "timeout" in str(output).lower() else "erro" if "erro" in str(output).lower() else "sucesso"                                     # ← linha nova
+            registrar("tracert", host, status) 
+            output = run_tracert(host)
+            perguntar_salvar("tracert", host, {"output": output})
             voltar()
         else:
             opcao_invalida()
@@ -103,6 +111,8 @@ def menu_conectividade():
 
 def menu_diagnostico():
     from tools.portscan import run_portscan
+    from utils.reporter import perguntar_salvar
+    from utils.historico import registrar
 
     while True:
         console.print()
@@ -117,7 +127,10 @@ def menu_diagnostico():
             break
         elif escolha == "1":
             host = pedir_host("scan")
-            run_portscan(host)
+            output = run_portscan(host)
+            status = "timeout" if "timeout" in str(output).lower() else "erro" if "erro" in str(output).lower() else "sucesso"                                     # ← linha nova
+            registrar("portscan", host, status)
+            perguntar_salvar("scan", host, output if isinstance(output, dict) else {"output": output})
             voltar()
         elif escolha == "2":
             console.print("[dim]Em breve...[/dim]")
@@ -128,12 +141,16 @@ def menu_diagnostico():
 def menu_servicos_web():
     from tools.dns import run_dns
     from tools.http_check import run_http_check
+    from tools.ssl_check import run_ssl_check
+    from utils.reporter import perguntar_salvar
+    from utils.historico import registrar
 
     while True:
         console.print()
         texto = Text()
         texto.append("  1. ", style="bold cyan"); texto.append("DNS Lookup\n")
         texto.append("  2. ", style="bold cyan"); texto.append("HTTP Check\n")
+        texto.append("  3. ", style="bold cyan"); texto.append("SSL Check\n")
         texto.append("  0. ", style="bold red");  texto.append("Voltar")
         console.print(Panel(texto, title="[bold]Serviços Web[/bold]", width=45))
 
@@ -143,22 +160,38 @@ def menu_servicos_web():
             break
         elif escolha == "1":
             host = pedir_host("dns")
-            run_dns(host)
+            output = run_dns(host)
+            status = "timeout" if "timeout" in str(output).lower() else "erro" if "erro" in str(output).lower() else "sucesso"                                     # ← linha nova
+            registrar("dns", host, status)
+            perguntar_salvar("dns", host, {"output": output})
             voltar()
         elif escolha == "2":
             url = pedir_url()
-            run_http_check(url)
+            output = run_http_check(url)
+            status = "timeout" if "timeout" in str(output).lower() else "erro" if "erro" in str(output).lower() else "sucesso"                                     # ← linha nova
+            registrar("http", host, status)
+            perguntar_salvar("http", url, output if isinstance(output, dict) else {"output": output})
             voltar()
         elif escolha == "3":
-            console.print("[dim]Em breve...[/dim]")
+            host = pedir_host("ssl")
+            output = run_ssl_check(host)
+            status = "timeout" if "timeout" in str(output).lower() else "erro" if "erro" in str(output).lower() else "sucesso"                                     # ← linha nova
+            registrar("ssl", host, status)
+            perguntar_salvar("ssl", host, output if isinstance(output, dict) else {"output": output})
+            voltar()
         else:
             opcao_invalida()
 
 
 def menu_monitor():
+    from tools.monitor import run_monitor
+    from utils.historico import registrar
+    from utils.reporter import perguntar_salvar
+
     while True:
         console.print()
         texto = Text()
+        texto.append("  1. ", style="bold cyan"); texto.append("Monitor MTR\n")
         texto.append("  0. ", style="bold red");  texto.append("Voltar")
         console.print(Panel(texto, title="[bold]Monitor[/bold]", width=45))
 
@@ -167,7 +200,12 @@ def menu_monitor():
         if escolha == "0":
             break
         elif escolha == "1":
-            console.print("[dim]Em breve...[/dim]")
+            host   = pedir_host("monitor")
+            output = run_monitor(host)
+            status = "erro" if isinstance(output, str) else "sucesso"
+            registrar("monitor", host, status)
+            perguntar_salvar("monitor", host, output if isinstance(output, dict) else {"output": output})
+            voltar()
         else:
             opcao_invalida()
 
@@ -182,9 +220,8 @@ def exibir_menu_principal():
     texto.append("  4. ", style="bold cyan");   texto.append("Monitor\n")
     texto.append("\n")
     texto.append("  ── utilitários ──────────────────\n", style="dim")
-    texto.append("  5. ", style="bold yellow"); texto.append("Relatórios "); texto.append("(em breve)\n", style="dim")
-    texto.append("  6. ", style="bold yellow"); texto.append("Histórico ");  texto.append("(em breve)\n", style="dim")
-    texto.append("  7. ", style="bold yellow"); texto.append("Configurações "); texto.append("(em breve)\n", style="dim")
+    texto.append("  5. ", style="bold cyan"); texto.append("Relatórios\n")
+    texto.append("  6. ", style="bold cyan"); texto.append("Histórico\n")
     texto.append("\n")
     texto.append("  0. ", style="bold red");    texto.append("Sair")
 
@@ -202,6 +239,10 @@ def run_menu():
     exibir_banner()
     exibir_sysinfo()
 
+    from utils.relatorios import run_relatorios
+    from utils.historico import run_historico
+
+
     while True:
         console.print()
         exibir_menu_principal()
@@ -218,7 +259,9 @@ def run_menu():
             menu_servicos_web()
         elif escolha == "4":
             menu_monitor()
-        elif escolha in ["5", "6", "7"]:
-            console.print("[dim]Em breve...[/dim]")
+        elif escolha == "5":
+            run_relatorios()
+        elif escolha == "6":
+            run_historico()
         else:
             opcao_invalida()
