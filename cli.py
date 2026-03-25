@@ -99,10 +99,13 @@ def menu_conectividade():
             perguntar_salvar("ping", host,{"output":output})
             voltar()
         elif escolha == "2":
-            host = pedir_host("tracert")
-            status = "timeout" if "timeout" in str(output).lower() else "erro" if "erro" in str(output).lower() else "sucesso"                                     # ← linha nova
-            registrar("tracert", host, status) 
+            host   = pedir_host("tracert")
+            output = None               
             output = run_tracert(host)
+            status = "timeout" if "timeout" in str(output).lower() \
+                    else "erro" if output is None or "erro" in str(output).lower() \
+                    else "sucesso"
+            registrar("tracert", host, status)
             perguntar_salvar("tracert", host, {"output": output})
             voltar()
         else:
